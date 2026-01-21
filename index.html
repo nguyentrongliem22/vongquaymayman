@@ -2,436 +2,556 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lucky Wheel - Loem Agency</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <!-- Confetti Library for celebration -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
     <style>
-        :root {
-            --primary: #e74c3c;
-            --secondary: #f1c40f;
-            --dark: #2c3e50;
-            --light: #ecf0f1;
-            --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
-            font-family: var(--font-main);
-            background: radial-gradient(circle, #2b32b2, #1488cc);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            font-family: 'Montserrat', sans-serif;
+            background: radial-gradient(circle at center, #2b1055, #7597de);
             overflow-x: hidden;
-            color: white;
         }
 
-        /* Header & Controls */
-        header {
-            width: 100%;
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(0,0,0,0.2);
-            backdrop-filter: blur(5px);
-            position: absolute;
-            top: 0;
-            z-index: 10;
-        }
-
-        .lang-switch {
-            background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.4);
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
-        }
-        .lang-switch:hover { background: white; color: var(--dark); }
-
-        /* Main Game Area */
-        .game-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            width: 100%;
-            padding-top: 60px; /* Space for header */
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-            font-size: 2.5rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            background: -webkit-linear-gradient(top, #f1c40f, #e67e22);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: 800;
-        }
-
-        /* Wheel Wrapper */
-        .wheel-wrapper {
+        /* Wheel Container */
+        .wheel-container {
             position: relative;
             width: 90vw;
-            max-width: 450px;
-            aspect-ratio: 1/1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 30px;
+            max-width: 400px;
+            height: 90vw;
+            max-height: 400px;
+            margin: 0 auto;
+            border-radius: 50%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 10px solid #ffffff;
+            background-color: #fff;
+            transition: transform 0.1s;
         }
 
-        /* The Canvas Wheel */
-        #wheelCanvas {
+        /* The actual canvas wheel */
+        #canvas {
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5), 0 0 0 10px rgba(255,255,255,0.1);
-            transition: transform 5s cubic-bezier(0.25, 0.1, 0.25, 1);
+            display: block;
         }
 
-        /* The Pointer/Arrow */
+        /* The Pointer (Triangle) */
         .pointer {
             position: absolute;
-            top: -20px;
+            top: -25px;
             left: 50%;
             transform: translateX(-50%);
             width: 40px;
             height: 50px;
-            background: var(--primary);
+            background: #ff3b3b;
             clip-path: polygon(50% 100%, 0 0, 100% 0);
-            z-index: 5;
+            z-index: 20;
             filter: drop-shadow(0 4px 4px rgba(0,0,0,0.3));
         }
 
-        /* Center Dot */
-        .center-dot {
-            position: absolute;
-            width: 50px;
-            height: 50px;
-            background: white;
-            border-radius: 50%;
-            box-shadow: 0 0 10px rgba(0,0,0,0.3);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            color: var(--dark);
-            z-index: 4;
-            border: 4px solid var(--secondary);
-        }
-
         /* Spin Button */
-        #spinBtn {
-            padding: 15px 50px;
-            font-size: 1.5rem;
-            background: linear-gradient(to bottom, #e74c3c, #c0392b);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 6px 0 #96281b, 0 15px 20px rgba(0,0,0,0.4);
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: transform 0.1s, box-shadow 0.1s;
-        }
-
-        #spinBtn:active {
-            transform: translateY(4px);
-            box-shadow: 0 2px 0 #96281b, 0 5px 10px rgba(0,0,0,0.4);
-        }
-
-        #spinBtn:disabled {
-            background: #7f8c8d;
-            box-shadow: none;
-            cursor: not-allowed;
-            transform: translateY(4px);
-        }
-
-        /* Modal Result */
-        .modal {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
-            z-index: 100;
-        }
-        .modal.active { opacity: 1; pointer-events: auto; }
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            color: var(--dark);
-            max-width: 90%;
-            width: 400px;
-            box-shadow: 0 0 30px rgba(255,255,255,0.2);
-            transform: scale(0.8);
-            transition: transform 0.3s;
-        }
-        .modal.active .modal-content { transform: scale(1); }
-        .modal h2 { margin-bottom: 10px; color: var(--primary); }
-        .modal p { font-size: 1.2rem; margin-bottom: 20px; font-weight: bold; }
-        .close-btn {
-            background: var(--dark);
-            color: white;
-            padding: 10px 25px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        /* Footer */
-        footer {
-            margin-top: auto;
-            padding: 15px;
-            width: 100%;
-            text-align: center;
-            font-size: 0.9rem;
-            color: rgba(255,255,255,0.7);
-            background: rgba(0,0,0,0.1);
-        }
-        footer a { color: var(--secondary); text-decoration: none; }
-
-        /* Confetti Effect (Simple CSS) */
-        .confetti {
+        .spin-btn {
             position: absolute;
-            width: 10px; height: 10px;
-            background: #f1c40f;
-            animation: fall linear forwards;
-        }
-        @keyframes fall {
-            to { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(145deg, #ffffff, #e6e6e6);
+            border-radius: 50%;
+            border: 4px solid #2b1055;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            color: #2b1055;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: transform 0.2s, background 0.2s;
+            user-select: none;
         }
 
-        /* Responsive Text */
-        @media (max-width: 600px) {
-            h1 { font-size: 1.8rem; }
-            #spinBtn { font-size: 1.2rem; padding: 12px 40px; }
+        .spin-btn:active {
+            transform: translate(-50%, -50%) scale(0.95);
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Modal Animation */
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .modal-content {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        /* Custom Scrollbar for Settings */
+        .settings-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .settings-scroll::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+            border-radius: 4px;
+        }
+        .settings-scroll::-webkit-scrollbar-thumb {
+            background: #888; 
+            border-radius: 4px;
+        }
+        .settings-scroll::-webkit-scrollbar-thumb:hover {
+            background: #555; 
         }
     </style>
 </head>
-<body>
+<body class="text-white min-h-screen flex flex-col items-center justify-between p-4">
 
-    <header>
-        <div style="font-weight: bold; font-size: 1.2rem;">LUCKY GAME</div>
-        <button class="lang-switch" onclick="toggleLanguage()">VI / EN</button>
+    <!-- Header & Language Switcher -->
+    <header class="w-full flex justify-between items-center max-w-4xl mb-6 relative z-30">
+        <div class="font-bold text-xl md:text-2xl tracking-wider text-yellow-300 flex items-center gap-2">
+            <span id="brandName">LUCKY WHEEL</span>
+        </div>
+        
+        <div class="flex gap-2">
+            <!-- Settings Button -->
+            <button onclick="openSettings()" class="bg-white/20 hover:bg-white/30 transition w-10 h-10 flex items-center justify-center rounded-full border border-white/30 backdrop-blur-sm" title="Cấu hình / Settings">
+                ⚙️
+            </button>
+            
+            <!-- Language Button -->
+            <button id="langToggle" class="bg-white/20 hover:bg-white/30 transition px-4 py-2 rounded-full text-sm font-semibold border border-white/30 backdrop-blur-sm">
+                🇻🇳 VN / 🇬🇧 EN
+            </button>
+        </div>
     </header>
 
-    <div class="game-container">
-        <h1 id="gameTitle">Vòng Quay May Mắn</h1>
+    <!-- Main Game Area -->
+    <main class="flex flex-col items-center justify-center w-full flex-grow relative z-10">
         
-        <div class="wheel-wrapper">
+        <!-- Game Title -->
+        <h1 id="gameTitle" class="text-3xl md:text-5xl font-black mb-8 text-center drop-shadow-lg text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-pink-500">
+            VÒNG QUAY MAY MẮN
+        </h1>
+
+        <!-- The Wheel -->
+        <div class="wheel-container mb-10">
             <div class="pointer"></div>
-            <canvas id="wheelCanvas" width="500" height="500"></canvas>
-            <div class="center-dot">★</div>
+            <canvas id="canvas" width="500" height="500"></canvas>
+            
+            <!-- Center Button -->
+            <div class="spin-btn" id="spinBtn" onclick="spin()">
+                <span id="spinText">QUAY</span>
+            </div>
         </div>
 
-        <button id="spinBtn" onclick="spinWheel()">QUAY NGAY</button>
-    </div>
-
-    <div class="modal" id="resultModal">
-        <div class="modal-content">
-            <h2 id="modalTitle">Chúc mừng!</h2>
-            <p id="resultText">Bạn nhận được...</p>
-            <button class="close-btn" onclick="closeModal()" id="closeBtn">Đóng</button>
+        <!-- Recent Winners or Instructions (Optional decoration) -->
+        <div class="glass-panel p-4 max-w-md w-full text-center">
+            <p id="instructionText" class="text-sm md:text-base opacity-90">
+                Nhấn nút ở giữa để thử vận may của bạn!
+            </p>
         </div>
-    </div>
+    </main>
 
-    <footer>
-        <p>Designed & Developed by <strong>Loem Agency</strong></p>
+    <!-- Footer -->
+    <footer class="w-full text-center py-4 mt-6 text-white/50 text-xs md:text-sm">
+        <p>&copy; 2024 Design by <span class="font-bold text-white">Loem Agency</span></p>
     </footer>
+
+    <!-- Winner Modal -->
+    <div id="resultModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
+        <div class="modal-content bg-white text-gray-800 rounded-2xl p-8 max-w-sm w-full text-center relative overflow-hidden shadow-2xl">
+            <!-- Decorative background blob -->
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-500 to-yellow-500"></div>
+            
+            <h2 id="congratsTitle" class="text-2xl font-bold mb-2 text-purple-700">CHÚC MỪNG!</h2>
+            <p id="congratsSubtitle" class="text-gray-500 mb-6">Bạn đã nhận được:</p>
+            
+            <div id="winnerResult" class="text-3xl font-black text-pink-600 mb-8 break-words transform scale-110 transition-transform">
+                <!-- Result goes here -->
+            </div>
+            
+            <button onclick="closeModal()" id="closeBtn" class="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-3 rounded-xl hover:shadow-lg hover:scale-[1.02] transition">
+                Tiếp tục chơi
+            </button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
+        <div class="modal-content bg-white text-gray-800 rounded-2xl p-6 max-w-lg w-full relative overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 id="settingsTitle" class="text-xl font-bold text-gray-800">Cấu hình vòng quay</h2>
+                <button onclick="closeSettings()" class="text-gray-500 hover:text-red-500 text-2xl font-bold">&times;</button>
+            </div>
+            
+            <!-- List Header -->
+            <div class="grid grid-cols-12 gap-2 text-xs font-bold text-gray-500 mb-2 px-1">
+                <div class="col-span-1 text-center">Color</div>
+                <div class="col-span-5">Tiếng Việt</div>
+                <div class="col-span-5">English</div>
+                <div class="col-span-1"></div>
+            </div>
+
+            <!-- Scrollable List -->
+            <div id="prizesList" class="flex-grow overflow-y-auto settings-scroll mb-4 px-1 space-y-2">
+                <!-- Javascript will populate this -->
+            </div>
+
+            <div class="flex gap-2 mt-auto pt-2 border-t">
+                <button onclick="addPrizeRow()" id="btnAdd" class="flex-1 bg-green-100 text-green-700 py-2 rounded-lg font-bold hover:bg-green-200 transition">
+                    + Thêm ô
+                </button>
+                <button onclick="saveSettings()" id="btnSave" class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700 transition">
+                    Lưu & Đóng
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // --- Configuration ---
-        const colors = [
-            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
-            '#9966FF', '#FF9F40', '#E7E9ED', '#33cc33'
-        ];
-        
-        // Prize Data (Song ngữ)
-        const prizes = [
-            { id: 1, text_vi: "10.000đ", text_en: "$1", color: "#FF0000" },
-            { id: 2, text_vi: "Chúc may mắn", text_en: "Good Luck", color: "#FFFFFF" },
-            { id: 3, text_vi: "50.000đ", text_en: "$5", color: "#FFA500" },
-            { id: 4, text_vi: "Voucher 10%", text_en: "10% OFF", color: "#FFFF00" },
-            { id: 5, text_vi: "100.000đ", text_en: "$10", color: "#008000" },
-            { id: 6, text_vi: "Mất lượt", text_en: "Miss Turn", color: "#808080" },
-            { id: 7, text_vi: "20.000đ", text_en: "$2", color: "#0000FF" },
-            { id: 8, text_vi: "Quà bí mật", text_en: "Secret Gift", color: "#800080" }
+        // Initial Defaults
+        let prizes = [
+            { text_vn: "10.000đ", text_en: "$1", color: '#FF6B6B' },
+            { text_vn: "Chúc may mắn", text_en: "Good Luck", color: '#4ECDC4' },
+            { text_vn: "Voucher 50%", text_en: "50% Off", color: '#FFE66D' },
+            { text_vn: "Thêm lượt", text_en: "Extra Spin", color: '#1A535C' },
+            { text_vn: "50.000đ", text_en: "$5", color: '#FF9F1C' },
+            { text_vn: "Mất lượt", text_en: "Miss Turn", color: '#FF4081' },
+            { text_vn: "Voucher 20%", text_en: "20% Off", color: '#2EC4B6' },
+            { text_vn: "Quà bí mật", text_en: "Secret Gift", color: '#6B5B95' }
         ];
 
-        // UI Text Resources
-        const uiText = {
-            vi: { title: "Vòng Quay May Mắn", btn: "QUAY NGAY", modalTitle: "Chúc mừng!", modalLose: "Rất tiếc!", modalClose: "Đóng", received: "Bạn nhận được: " },
-            en: { title: "Lucky Wheel", btn: "SPIN NOW", modalTitle: "Congratulations!", modalLose: "Oh No!", modalClose: "Close", received: "You got: " }
+        // --- Language State ---
+        let currentLang = 'vn'; // 'vn' or 'en'
+        const langData = {
+            vn: {
+                title: "VÒNG QUAY MAY MẮN",
+                spin: "QUAY",
+                instruction: "Nhấn nút ở giữa để thử vận may của bạn!",
+                congrats: "CHÚC MỪNG!",
+                subtitle: "Bạn đã nhận được:",
+                close: "Tiếp tục chơi",
+                settingsTitle: "Cấu hình vòng quay",
+                btnAdd: "+ Thêm ô",
+                btnSave: "Lưu & Đóng"
+            },
+            en: {
+                title: "LUCKY WHEEL",
+                spin: "SPIN",
+                instruction: "Press the center button to try your luck!",
+                congrats: "CONGRATULATIONS!",
+                subtitle: "You have won:",
+                close: "Play Again",
+                settingsTitle: "Wheel Settings",
+                btnAdd: "+ Add Segment",
+                btnSave: "Save & Close"
+            }
         };
 
-        // --- State ---
-        let currentLang = 'vi';
-        let currentRotation = 0;
+        // --- Wheel Variables ---
+        let startAngle = 0;
+        let arc = Math.PI / (prizes.length / 2);
+        let spinTimeout = null;
+        let spinArcStart = 10;
+        let spinTime = 0;
+        let spinTimeTotal = 0;
+        let ctx;
         let isSpinning = false;
-        
-        // --- Elements ---
-        const canvas = document.getElementById('wheelCanvas');
-        const ctx = canvas.getContext('2d');
-        const spinBtn = document.getElementById('spinBtn');
-        const wheelObj = document.getElementById('wheelCanvas'); // For CSS Transform
-        const modal = document.getElementById('resultModal');
 
-        // --- Core Functions ---
+        // --- Initialization ---
+        document.addEventListener("DOMContentLoaded", () => {
+            initCanvas();
+            drawWheel();
+            updateLanguageUI();
+        });
+
+        document.getElementById('langToggle').addEventListener('click', toggleLanguage);
+        
+        // Handle resize to keep wheel responsive/sharp
+        window.addEventListener('resize', () => {
+             drawWheel();
+        });
+
+        function initCanvas() {
+            const canvas = document.getElementById("canvas");
+            // Set canvas resolution high for sharpness
+            canvas.width = 500;
+            canvas.height = 500;
+        }
 
         function drawWheel() {
-            const numSegments = prizes.length;
-            const arcSize = (2 * Math.PI) / numSegments;
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const radius = canvas.width / 2;
+            const canvas = document.getElementById("canvas");
+            if (!canvas.getContext) return;
+            
+            arc = Math.PI / (prizes.length / 2); // Update arc based on current prizes length
+            
+            ctx = canvas.getContext("2d");
+            const outsideRadius = 240; 
+            const textRadius = 160;
+            const insideRadius = 50;
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, 500, 500);
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = 2;
+            
+            // Dynamic font size based on number of slices
+            let fontSize = 24;
+            if(prizes.length > 12) fontSize = 16;
+            else if(prizes.length > 8) fontSize = 20;
 
-            for (let i = 0; i < numSegments; i++) {
-                const angle = i * arcSize - Math.PI / 2; // Start at -90deg (top)
+            ctx.font = `bold ${fontSize}px Montserrat, sans-serif`;
+
+            for(let i = 0; i < prizes.length; i++) {
+                const angle = startAngle + i * arc;
                 
-                // Draw Slice
+                // Draw slice
+                ctx.fillStyle = prizes[i].color;
                 ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
-                ctx.arc(centerX, centerY, radius, angle, angle + arcSize);
-                ctx.fillStyle = prizes[i].color; // Use specific color if defined
-                if(!prizes[i].color) ctx.fillStyle = colors[i % colors.length]; // Fallback
-                ctx.fill();
+                ctx.arc(250, 250, outsideRadius, angle, angle + arc, false);
+                ctx.arc(250, 250, insideRadius, angle + arc, angle, true);
                 ctx.stroke();
+                ctx.fill();
 
                 // Draw Text
                 ctx.save();
-                ctx.translate(centerX, centerY);
-                ctx.rotate(angle + arcSize / 2);
-                ctx.textAlign = "right";
-                ctx.fillStyle = (prizes[i].color === '#FFFFFF' || prizes[i].color === '#E7E9ED') ? "#000" : "#fff";
-                ctx.font = "bold 24px Arial";
-                const text = currentLang === 'vi' ? prizes[i].text_vi : prizes[i].text_en;
-                ctx.fillText(text, radius - 20, 10);
+                ctx.fillStyle = "white";
+                ctx.shadowColor = "rgba(0,0,0,0.5)";
+                ctx.shadowBlur = 4;
+                ctx.translate(250 + Math.cos(angle + arc / 2) * textRadius, 
+                            250 + Math.sin(angle + arc / 2) * textRadius);
+                ctx.rotate(angle + arc / 2 + Math.PI / 2);
+                
+                const text = currentLang === 'vn' ? prizes[i].text_vn : prizes[i].text_en;
+                // Truncate long text
+                let displayText = text;
+                if(text.length > 15) displayText = text.substring(0, 12) + '...';
+
+                ctx.fillText(displayText, -ctx.measureText(displayText).width / 2, 0);
                 ctx.restore();
             }
         }
 
+        // --- Spin Logic ---
+        function spin() {
+            if(isSpinning) return;
+            
+            isSpinning = true;
+            // Disable buttons during spin
+            document.getElementById('spinBtn').style.pointerEvents = 'none';
+            
+            spinAngleStart = Math.random() * 10 + 10; 
+            spinTime = 0;
+            spinTimeTotal = Math.random() * 3 + 4 * 1000; 
+            
+            rotateWheel();
+        }
+
+        function rotateWheel() {
+            spinTime += 30;
+            if(spinTime >= spinTimeTotal) {
+                stopRotateWheel();
+                return;
+            }
+            
+            const spinAngle = spinAngleStart - easeOut(spinTime, 0, spinAngleStart, spinTimeTotal);
+            startAngle += (spinAngle * Math.PI / 180);
+            drawWheel();
+            spinTimeout = requestAnimationFrame(rotateWheel);
+        }
+
+        function stopRotateWheel() {
+            isSpinning = false;
+            document.getElementById('spinBtn').style.pointerEvents = 'auto';
+            
+            const degrees = startAngle * 180 / Math.PI + 90;
+            const arcd = arc * 180 / Math.PI;
+            const index = Math.floor((360 - degrees % 360) / arcd);
+            
+            ctx.save();
+            ctx.font = 'bold 30px Montserrat, sans-serif';
+            // Handle edge case where index might be out of bounds due to floating point
+            let winnerIndex = index;
+            if (winnerIndex >= prizes.length) winnerIndex = 0;
+            
+            const winnerText = currentLang === 'vn' ? prizes[winnerIndex].text_vn : prizes[winnerIndex].text_en;
+            ctx.restore();
+            
+            fireConfetti();
+            showModal(winnerText);
+        }
+
+        function easeOut(t, b, c, d) {
+            t /= d;
+            t--;
+            return c * (t*t*t + 1) + b;
+        }
+
+        // --- UI & Language Logic ---
         function toggleLanguage() {
-            currentLang = currentLang === 'vi' ? 'en' : 'vi';
-            updateUI();
+            currentLang = currentLang === 'vn' ? 'en' : 'vn';
+            updateLanguageUI();
             drawWheel();
         }
 
-        function updateUI() {
-            const t = uiText[currentLang];
-            document.getElementById('gameTitle').innerText = t.title;
-            document.getElementById('spinBtn').innerText = t.btn;
-            document.getElementById('closeBtn').innerText = t.modalClose;
+        function updateLanguageUI() {
+            const data = langData[currentLang];
+            document.getElementById('gameTitle').innerText = data.title;
+            document.getElementById('spinText').innerText = data.spin;
+            document.getElementById('instructionText').innerText = data.instruction;
+            document.getElementById('congratsTitle').innerText = data.congrats;
+            document.getElementById('congratsSubtitle').innerText = data.subtitle;
+            document.getElementById('closeBtn').innerText = data.close;
+            
+            // Settings UI Language
+            document.getElementById('settingsTitle').innerText = data.settingsTitle;
+            document.getElementById('btnAdd').innerText = data.btnAdd;
+            document.getElementById('btnSave').innerText = data.btnSave;
         }
 
-        function spinWheel() {
-            if (isSpinning) return;
-            isSpinning = true;
-            spinBtn.disabled = true;
+        // --- Settings Modal Logic ---
+        function openSettings() {
+            const modal = document.getElementById('settingsModal');
+            const list = document.getElementById('prizesList');
+            list.innerHTML = ''; // Clear current list
 
-            // Random spin logic: at least 5 full rotations (1800deg) + random segment
-            const extraSpins = 5 * 360; 
-            const randomDegree = Math.floor(Math.random() * 360); 
-            // Calculate total rotation needed
-            // We add to currentRotation to keep spinning in same direction
-            const spinAngle = extraSpins + randomDegree; 
-            
-            currentRotation += spinAngle;
-            
-            // CSS Transition
-            wheelObj.style.transform = `rotate(${currentRotation}deg)`;
+            // Generate Input Rows
+            prizes.forEach((prize, index) => {
+                const row = document.createElement('div');
+                row.className = 'grid grid-cols-12 gap-2 items-center';
+                row.innerHTML = `
+                    <div class="col-span-1">
+                        <input type="color" value="${prize.color}" class="prize-color w-full h-8 rounded cursor-pointer border-0 p-0">
+                    </div>
+                    <div class="col-span-5">
+                        <input type="text" value="${prize.text_vn}" class="prize-vn w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-500" placeholder="VN">
+                    </div>
+                    <div class="col-span-5">
+                        <input type="text" value="${prize.text_en}" class="prize-en w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-500" placeholder="EN">
+                    </div>
+                    <div class="col-span-1 text-right">
+                        <button onclick="deletePrizeRow(this)" class="text-red-400 hover:text-red-600 font-bold p-1">✕</button>
+                    </div>
+                `;
+                list.appendChild(row);
+            });
 
-            // Wait for animation end (5s matches CSS)
-            setTimeout(() => {
-                showResult(currentRotation);
-                isSpinning = false;
-                spinBtn.disabled = false;
-            }, 5000);
+            modal.classList.remove('hidden');
         }
 
-        function showResult(actualRotation) {
-            const numSegments = prizes.length;
-            const arcSize = 360 / numSegments;
-            
-            // Calculate which segment is at the TOP (pointer is at top)
-            // Normalize rotation to 0-360
-            const finalAngle = actualRotation % 360;
-            
-            // Because canvas starts drawing at -90deg (top), and rotation is clockwise:
-            // The logic: 360 - finalAngle gives the position relative to 0.
-            // But we need to account for index mapping.
-            // Simplified: The index is calculated based on how much "backward" from 0 we are.
-            let index = Math.floor((360 - finalAngle + (arcSize/2)) % 360 / arcSize);
-            // Adjust index wrap-around just in case
-            if (index < 0) index = numSegments - 1;
-            
-            // Note: Mathematical index alignment needs careful tuning. 
-            // Given the drawing starts at -90deg (12 o'clock), index 0 is at 12-1:30 position roughly.
-            // With the pointer at 12 o'clock static, and wheel rotating clockwise.
-            // Correct mapping:
-            const winningIndex = Math.floor((360 - (finalAngle % 360)) / arcSize) % numSegments;
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.add('hidden');
+        }
 
-            const winner = prizes[winningIndex];
+        function addPrizeRow() {
+            const list = document.getElementById('prizesList');
+            const row = document.createElement('div');
+            row.className = 'grid grid-cols-12 gap-2 items-center';
+            // Random color for new item
+            const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
             
-            const t = uiText[currentLang];
-            const resultText = currentLang === 'vi' ? winner.text_vi : winner.text_en;
-            
-            const modalTitle = document.getElementById('modalTitle');
-            const modalBody = document.getElementById('resultText');
+            row.innerHTML = `
+                <div class="col-span-1">
+                    <input type="color" value="${randomColor}" class="prize-color w-full h-8 rounded cursor-pointer border-0 p-0">
+                </div>
+                <div class="col-span-5">
+                    <input type="text" value="" class="prize-vn w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-500" placeholder="VN">
+                </div>
+                <div class="col-span-5">
+                    <input type="text" value="" class="prize-en w-full border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-500" placeholder="EN">
+                </div>
+                <div class="col-span-1 text-right">
+                    <button onclick="deletePrizeRow(this)" class="text-red-400 hover:text-red-600 font-bold p-1">✕</button>
+                </div>
+            `;
+            list.appendChild(row);
+            // Scroll to bottom
+            list.scrollTop = list.scrollHeight;
+        }
 
-            if (resultText.toLowerCase().includes("mất lượt") || resultText.toLowerCase().includes("miss")) {
-                modalTitle.innerText = t.modalLose;
-                modalTitle.style.color = "#7f8c8d";
-            } else {
-                modalTitle.innerText = t.modalTitle;
-                modalTitle.style.color = "#e74c3c";
-                createConfetti(); // Celebration
+        function deletePrizeRow(btn) {
+            const list = document.getElementById('prizesList');
+            if(list.children.length <= 2) {
+                alert("Cần ít nhất 2 ô để quay!");
+                return;
+            }
+            btn.parentElement.parentElement.remove();
+        }
+
+        function saveSettings() {
+            const list = document.getElementById('prizesList');
+            const rows = list.querySelectorAll('.grid');
+            const newPrizes = [];
+
+            rows.forEach(row => {
+                const color = row.querySelector('.prize-color').value;
+                const vn = row.querySelector('.prize-vn').value.trim();
+                const en = row.querySelector('.prize-en').value.trim();
+
+                if(vn && en) {
+                    newPrizes.push({
+                        text_vn: vn,
+                        text_en: en,
+                        color: color
+                    });
+                }
+            });
+
+            if(newPrizes.length < 2) {
+                alert("Vui lòng nhập đầy đủ thông tin cho ít nhất 2 ô!");
+                return;
             }
 
-            modalBody.innerHTML = `${t.received} <br><strong style="font-size:1.5em; color: ${winner.color === '#FFFFFF' ? '#000' : winner.color}">${resultText}</strong>`;
-            modal.classList.add('active');
+            prizes = newPrizes;
+            startAngle = 0; // Reset angle
+            drawWheel();
+            closeSettings();
+        }
+
+        // --- Modal & FX ---
+        function showModal(result) {
+            const modal = document.getElementById('resultModal');
+            document.getElementById('winnerResult').innerText = result;
+            modal.classList.remove('hidden');
         }
 
         function closeModal() {
-            modal.classList.remove('active');
+            const modal = document.getElementById('resultModal');
+            modal.classList.add('hidden');
         }
 
-        function createConfetti() {
-            for(let i=0; i<50; i++) {
-                const conf = document.createElement('div');
-                conf.classList.add('confetti');
-                conf.style.left = Math.random() * 100 + 'vw';
-                conf.style.animationDuration = (Math.random() * 3 + 2) + 's';
-                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                document.body.appendChild(conf);
-                
-                setTimeout(() => conf.remove(), 5000);
+        function fireConfetti() {
+            var duration = 3 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 60 };
+
+            function randomInRange(min, max) {
+                return Math.random() * (max - min) + min;
             }
+
+            var interval = setInterval(function() {
+                var timeLeft = animationEnd - Date.now();
+
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+
+                var particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
         }
-
-        // Init
-        drawWheel();
-        updateUI();
-
-        // Responsive redraw on resize
-        window.addEventListener('resize', drawWheel);
-
     </script>
 </body>
 </html>
